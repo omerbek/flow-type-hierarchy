@@ -6,6 +6,15 @@ const mint = '#9ef4dc';
 const amber = '#ffcb7d';
 const ink = '#152129';
 const duration = 8;
+const controls = [...document.querySelectorAll('#settings input')];
+const settings = Object.fromEntries(controls.map(input => [
+  input.id, input.type === 'number' ? Number(input.value) : input.value
+]));
+controls.forEach(input => input.addEventListener('input', () => {
+  if (input.type === 'number' && (input.value === '' || !input.validity.valid)) return;
+  settings[input.id] = input.type === 'number' ? input.valueAsNumber : input.value;
+  draw();
+}));
 
 function rect(x, y, w, h, color) {
   ctx.fillStyle = color;
@@ -23,10 +32,10 @@ const smooth = value => clamp(value) ** 2 * (3 - 2 * clamp(value));
 
 function render(t) {
   const p = smooth(t / 4);
-  label('ÇIKIŞ DEBİSİ', 55 + 35 * p, 147, 20);
-  label('42', 50 + 40 * p, 251, 55 + 30 * p);
-  label('L/s', 260 - 60 * p, 251, 27);
-  label('Normal çalışma', 55 + 35 * p, 296, 20, amber);
+  label(settings.heading, 55 + 35 * p, 147, 20);
+  label(String(settings.value), 50 + 40 * p, 251, 55 + 30 * p);
+  label('L/s', Math.max(200, 95 + ctx.measureText(String(settings.value)).width), 251, 27);
+  label(settings.status, 55 + 35 * p, 296, 20, amber);
 }
 
 const seek = document.querySelector('#seek');
@@ -67,6 +76,13 @@ play.addEventListener('click', () => {
 seek.addEventListener('input', () => {
   position = Number(seek.value);
   draw();
+});
+
+document.querySelector('#save').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'flow-type-hierarchy.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 });
 
 draw();
